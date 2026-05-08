@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+/* 溫暖日系母親節色票 */
+:root {
+  --background: #faf6ef;       /* 米白／和紙 */
+  --surface: #fffefb;          /* 卡片底色 */
+  --surface-soft: #f3ece1;     /* 柔和米駝 */
+  --foreground: #2e2620;       /* 深棕黑 */
+  --muted: #8a7a6b;            /* 淡墨棕 */
+  --muted-soft: #c7b9aa;       /* 米色描邊 */
+  --border: #e8dfd3;           /* 紙緣線 */
+  --primary: #c97f8b;          /* 康乃馨深粉 */
+  --primary-soft: #f2d1cc;     /* 康乃馨花瓣粉 */
+  --accent: #b8a888;           /* 麻色 */
+  --sage: #a8b89a;             /* 內斂草綠 */
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-soft: var(--surface-soft);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-soft: var(--muted-soft);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-soft: var(--primary-soft);
+  --color-accent: var(--accent);
+  --color-sage: var(--sage);
+
+  --font-sans: var(--font-noto-sans-jp);
+  --font-serif: var(--font-shippori-mincho);
+  --font-display: var(--font-shippori-mincho);
+  --font-hand: var(--font-klee-one);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+  font-feature-settings: "palt";
+  letter-spacing: 0.02em;
+}
+
+/* 紙紋背景：以柔和漸層 + 細微噪點呈現 */
+.paper {
+  background-image:
+    radial-gradient(1200px 600px at 10% -10%, rgba(242, 209, 204, 0.35), transparent 60%),
+    radial-gradient(900px 500px at 110% 10%, rgba(184, 168, 136, 0.18), transparent 60%),
+    linear-gradient(180deg, #faf6ef 0%, #f6efe3 100%);
+}
+
+/* 滾動條柔化 */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--muted-soft);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 文字選取色 */
+::selection {
+  background: var(--primary-soft);
+  color: var(--foreground);
+}
