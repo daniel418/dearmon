@@ -1,0 +1,11 @@
+services:
+  dearmon:
+    build: .
+    image: dearmon:latest
+    container_name: dearmon
+    restart: unless-stopped
+    # 只開到 127.0.0.1,讓本機 nginx 反向代理,不直接對外
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      NODE_ENV: production
