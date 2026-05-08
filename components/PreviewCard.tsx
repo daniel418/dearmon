@@ -40,8 +40,25 @@ export default function PreviewCard({
   const [position, setPosition] = useState<Position>({ x: 50, y: 50 });
   const [dragging, setDragging] = useState(false);
   const [hintDismissed, setHintDismissed] = useState(false);
-  // 已生成的卡片圖,顯示在下方供 LINE / WebView 等不支援 a[download] 的環境長按儲存
+  // 已生成的卡片圖(blob: URL),顯示在下方供 LINE / WebView 等不支援 a[download] 的環境長按儲存
   const [resultImage, setResultImage] = useState<string | null>(null);
+  // LINE in-app browser 偵測(SSR 安全:初始 false,mount 後再判斷)
+  const [isLineApp, setIsLineApp] = useState(false);
+
+  useEffect(() => {
+    if (typeof navigator !== "undefined") {
+      setIsLineApp(/Line\//.test(navigator.userAgent));
+    }
+  }, []);
+
+  // resultImage 改變時釋放上一個 blob URL,組件卸載時也要清
+  useEffect(() => {
+    return () => {
+      if (resultImage?.startsWith("blob:")) {
+        URL.revokeObjectURL(resultImage);
+      }
+    };
+  }, [resultImage]);
 
   // 換照片時重置位置與提示
   useEffect(() => {
@@ -122,18 +139,15 @@ export default function PreviewCard({
       const dataUrl = await toPng(cardRef.current, {
         pixelRatio: 2,
         backgroundColor: "#fffefb",
-        // skipFonts:不讓 html-to-image 試圖 inline 字體
-        // (Japanese fontsource 把字體切成 100+ subset,inline 會讓 SVG 巨大 + WebView 爆炸)
-        // 字體已由前面的 document.fonts.load 主動載入,canvas 截圖時用得到
         skipFonts: true,
       });
 
-      // 把生成的 PNG 顯示在下方,LINE / 受限 WebView 環境可長按儲存(LINE 會擋 a[download],但不擋長按圖片儲存)
-      setResultImage(dataUrl);
+      // dataUrl → Blob → blob URL(blob URL 在多數 WebView 表現比 data URL 友善)
+      const blob = await (await fetch(dataUrl)).blob();
+      const blobUrl = URL.createObjectURL(blob);
+      setResultImage(blobUrl);
 
       // LINE 內建瀏覽器明確擋下載 → 不要觸發 a[download],免得跳「不支援檔案下載」系統警告
-      const isLineApp =
-        typeof navigator !== "undefined" && /Line\//.test(navigator.userAgent);
       if (isLineApp) return;
 
       const filename = `dearmon-${Date.now()}.png`;
@@ -145,7 +159,6 @@ export default function PreviewCard({
         window.matchMedia("(pointer: coarse)").matches;
 
       if (isCoarsePointer) {
-        const blob = await (await fetch(dataUrl)).blob();
         const file = new File([blob], filename, { type: "image/png" });
 
         if (
@@ -159,19 +172,18 @@ export default function PreviewCard({
               files: [file],
               title: "Dearmon 母親節卡片",
             });
-            return; // 分享成功 → 結束(finally 仍會把 downloading 設回 false)
+            return;
           } catch (err) {
-            if ((err as Error).name === "AbortError") return; // 使用者取消
+            if ((err as Error).name === "AbortError") return;
             console.warn("Web Share API 失敗,改用一般下載:", err);
-            // 其他真錯誤掉到下方 fallback
           }
         }
       }
 
-      // 桌機 / 不支援 share / share 失敗 → 一般下載
+      // 桌機 / 不支援 share → 一般下載
       const link = document.createElement("a");
       link.download = filename;
-      link.href = dataUrl;
+      link.href = blobUrl;
       link.click();
     } catch (error) {
       const e = error as unknown;
@@ -316,8 +328,17 @@ export default function PreviewCard({
 
         {resultImage && (
           <div className="space-y-2 rounded-2xl border border-primary/40 bg-surface-soft p-4">
+            {isLineApp && (
+              <div className="rounded-xl bg-primary/10 px-3 py-2 text-[12px] leading-6 text-primary">
+                <strong>LINE 內建瀏覽器限制下載與長按儲存。</strong>
+                <br />
+                請點此頁面**右上「⋯」按鈕** → 選
+                <strong>「在其他瀏覽器開啟」</strong>(Chrome / Safari)
+                ,再重新生成下載即可儲存。
+              </div>
+            )}
             <p className="text-[12px] leading-6 text-foreground">
-              卡片已生成 — 在 LINE 內建瀏覽器或不允許下載的 App 裡,請
+              卡片已生成 —
               <strong className="text-primary">長按下方圖片</strong>
               (桌機右鍵)選「儲存到照片 / 另存圖片」。
             </p>
@@ -326,6 +347,7 @@ export default function PreviewCard({
               src={resultImage}
               alt="生成的卡片(長按儲存)"
               className="w-full rounded-xl border border-border"
+              style={{ WebkitTouchCallout: "default", userSelect: "auto" }}
             />
           </div>
         )}
