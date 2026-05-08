@@ -97,10 +97,39 @@ export default function PreviewCard({
         backgroundColor: "#fffefb",
         skipFonts: true,
       });
-      const link = document.createElement("a");
-      link.download = `dearmon-${Date.now()}.png`;
-      link.href = dataUrl;
-      link.click();
+
+      const filename = `dearmon-${Date.now()}.png`;
+
+      // 手機優先:呼叫原生分享選單(iOS 直接給「儲存到照片」、Android 給「下載 / LINE / Photos」)
+      const blob = await (await fetch(dataUrl)).blob();
+      const file = new File([blob], filename, { type: "image/png" });
+
+      let shared = false;
+      if (
+        typeof navigator !== "undefined" &&
+        typeof navigator.share === "function" &&
+        typeof navigator.canShare === "function" &&
+        navigator.canShare({ files: [file] })
+      ) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: "Dearmon 母親節卡片",
+          });
+          shared = true;
+        } catch (err) {
+          // 使用者主動取消就不再 fallback 下載
+          if ((err as Error).name === "AbortError") return;
+          console.warn("Web Share API 失敗,改用一般下載:", err);
+        }
+      }
+
+      if (!shared) {
+        const link = document.createElement("a");
+        link.download = filename;
+        link.href = dataUrl;
+        link.click();
+      }
     } catch (error) {
       const e = error as unknown;
       const ctor =
