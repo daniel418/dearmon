@@ -120,8 +120,10 @@ export default function PreviewCard({
       const dataUrl = await toPng(cardRef.current, {
         pixelRatio: 2,
         backgroundColor: "#fffefb",
-        // 不再 skipFonts:讓 html-to-image 把字體 inline 進 SVG,
-        // 即使裝置端字體還沒準備好,輸出 PNG 仍能正確渲染
+        // skipFonts:不讓 html-to-image 試圖 inline 字體
+        // (Japanese fontsource 把字體切成 100+ subset,inline 會讓 SVG 巨大 + WebView 爆炸)
+        // 字體已由前面的 document.fonts.load 主動載入,canvas 截圖時用得到
+        skipFonts: true,
       });
 
       const filename = `dearmon-${Date.now()}.png`;
