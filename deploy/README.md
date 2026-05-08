@@ -1,99 +1,78 @@
 # 部署到 dearmon.daniellin.tw
 
-> 環境假設:Ubuntu/Debian VPS、已安裝 nginx、DNS 在 Cloudflare、Docker 尚未安裝。
+> 改用 **static export + nginx 直送**,VPS 不需 Node / Docker。
+> 環境假設:Ubuntu/Debian VPS、已有 nginx、DNS 在 Cloudflare。
 
-## 1. Cloudflare DNS
+## 架構
 
-在 Cloudflare → daniellin.tw → DNS:
-
-| 類型 | 名稱     | 內容(VPS IP) | Proxy            |
-| ---- | -------- | --------------- | ---------------- |
-| A    | dearmon  | `<你的 VPS IP>` | 視需求(見下方)|
-
-**Proxy 設定建議:**
-
-- **橘雲(Proxied):** 用 Cloudflare 邊緣 SSL,SSL/TLS 模式設成 **Full (strict)**(伺服器仍要有有效 Let's Encrypt 憑證)。
-- **灰雲(DNS only):** 直連 VPS,SSL 全靠 Let's Encrypt。
-
-## 2. 在 VPS 上安裝 Docker(Ubuntu/Debian 官方倉庫)
-
-```bash
-# 移除舊版本(如果有)
-for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do
-  sudo apt-get remove -y $pkg 2>/dev/null
-done
-
-# 安裝 Docker official repo
-sudo apt-get update
-sudo apt-get install -y ca-certificates curl
-sudo install -m 0755 -d /etc/apt/keyrings
-sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
-     -o /etc/apt/keyrings/docker.asc
-sudo chmod a+r /etc/apt/keyrings/docker.asc
-
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] \
-  https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
-  | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-sudo apt-get update
-sudo apt-get install -y docker-ce docker-ce-cli containerd.io \
-                        docker-buildx-plugin docker-compose-plugin
-
-# 把自己加進 docker 群組,免每次 sudo
-sudo usermod -aG docker $USER
-# 重新登入或執行:newgrp docker
+```
+WSL  ─npm run build──▶  out/    (純靜態 HTML/CSS/JS)
+                          │ rsync
+                          ▼
+VPS  /var/www/dearmon/  ─▶  nginx ─▶  Cloudflare ─▶  使用者
 ```
 
-> Debian 請把上面 `ubuntu` 換成 `debian`。
+## 1. Cloudflare DNS / SSL
 
-## 3. 拉 repo 並啟動容器
+DNS:`dearmon` A 記錄指到 VPS IP(灰雲或橘雲皆可)
 
-```bash
-cd /opt   # 或你慣用的位置
-sudo git clone https://github.com/<你的帳號>/dearmon.git
-sudo chown -R $USER:$USER dearmon
-cd dearmon
+SSL/TLS 模式:**Flexible**(Cloudflare ↔ VPS 用 HTTP,使用者 ↔ Cloudflare 用 HTTPS,VPS 不需憑證)
 
-docker compose up -d --build
-docker compose ps              # 確認狀態
-docker compose logs -f         # 看 log
-curl -I http://127.0.0.1:3001  # 應該看到 200(host port 3001 → container 3000)
-```
-
-## 4. nginx 反向代理
+## 2. VPS 第一次設定
 
 ```bash
+# 建立網站目錄
+sudo mkdir -p /var/www/dearmon
+sudo chown -R $USER:$USER /var/www/dearmon
+
+# 設 nginx vhost
+cd /opt/dearmon          # 你已 clone 的 repo
+git pull
 sudo cp deploy/nginx-dearmon.conf /etc/nginx/sites-available/dearmon.daniellin.tw
 sudo ln -s /etc/nginx/sites-available/dearmon.daniellin.tw /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-此時用 `curl -H "Host: dearmon.daniellin.tw" http://127.0.0.1` 應該能看到頁面。
-
-## 5. Let's Encrypt SSL
-
-```bash
-sudo apt-get install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d dearmon.daniellin.tw
-```
-
-certbot 會自動改寫 nginx 設定加上 443 server block,並設好 auto-renew(systemd timer)。
-
-## 6. 之後更新
+如果之前有跑 Docker:
 
 ```bash
 cd /opt/dearmon
-git pull
-docker compose up -d --build
+docker compose down 2>/dev/null            # 把舊容器停掉
+docker image rm dearmon:latest 2>/dev/null # 清掉佔空間的 image
 ```
 
-需要更乾淨可以加 `docker image prune -f` 清理舊的 layer。
+## 3. WSL 端 build + 推到 VPS
+
+```bash
+cd ~/project/dearmon
+npm run build                              # 產出 out/
+
+# 把 out/ 同步到 VPS(--delete 會清掉伺服器上多餘檔)
+rsync -avz --delete out/ root@<VPS_IP>:/var/www/dearmon/
+```
+
+> 把 `<VPS_IP>` 換成實際 IP 或 hostname。建議在 `~/.ssh/config` 設一個別名。
+
+## 4. 之後每次更新
+
+```bash
+# 寫 code → commit → push GitHub
+git push
+
+# WSL build 並推
+npm run build && rsync -avz --delete out/ root@<VPS_IP>:/var/www/dearmon/
+```
+
+可以考慮包成腳本 `deploy/push.sh` 或 npm script。
 
 ## 疑難排解
 
-- **`docker compose up` build 失敗 `output: standalone` 沒生效:** 確認 `next.config.ts` 已含 `output: "standalone"`。
-- **首頁載入但靜態資源 404:** 確認 `Dockerfile` 有 COPY `.next/static` 與 `public/`。
-- **Cloudflare 顯示 521 / 522:** VPS 防火牆未開 80/443,或 nginx 沒在跑。
-- **Cloudflare 顯示 525:** SSL/TLS 模式設成 Full (strict) 但 origin 沒有有效憑證 → 完成步驟 5 即可。
+- **404 on /:** `/var/www/dearmon/index.html` 不存在 → rsync 沒成功,確認權限
+- **403 Forbidden:** nginx 對 `/var/www/dearmon` 沒讀權限 → `sudo chown -R www-data:www-data /var/www/dearmon` 或開 755
+- **Cloudflare 525/526:** SSL/TLS 模式不該用 Full(strict),改 Flexible
+- **WSL 推送被擋:** 確認 VPS sshd 允許 root 或改用一般 user + `sudo chown` 給 nginx 讀
+
+## 為何不用 Docker
+
+VPS 只有 ~1 GB RAM,扣掉 Grafana/InfluxDB/PM2 等服務後不夠跑 Next.js build(會 OOM)。本站完全是 client-side React,沒有 SSR / API,適合 static export。
