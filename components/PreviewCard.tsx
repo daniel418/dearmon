@@ -89,13 +89,39 @@ export default function PreviewCard({
     if (!cardRef.current || downloading) return;
     setDownloading(true);
     try {
+      // 1. 顯式預載卡片實際會用到的字體 + 字元(觸發 fontsource unicode-range subset 載入)
+      //    LINE in-app browser 等環境字體載入較 lazy,沒這步可能截到空白
       if (typeof document !== "undefined" && "fonts" in document) {
+        const sampleText =
+          bodyText + " HAPPY MOTHER'S DAY Dearmon 字型 明朝體 黑體 手書き";
+        await Promise.all([
+          document.fonts.load(`400 15px "Noto Sans JP"`, sampleText),
+          document.fonts.load(`400 15px "Shippori Mincho"`, sampleText),
+          document.fonts.load(`400 15px "Klee One"`, sampleText),
+        ]).catch(() => {});
         await document.fonts.ready;
       }
+
+      // 2. 等卡片裡所有 <img>(背景圖、上傳的照片)真的 load 完
+      const imgs = Array.from(cardRef.current.querySelectorAll("img"));
+      await Promise.all(
+        imgs.map((img) => {
+          if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+          return new Promise<void>((resolve) => {
+            const done = () => resolve();
+            img.addEventListener("load", done, { once: true });
+            img.addEventListener("error", done, { once: true });
+            // 安全網:5 秒沒載完也放行,免得卡死
+            setTimeout(done, 5000);
+          });
+        }),
+      );
+
       const dataUrl = await toPng(cardRef.current, {
         pixelRatio: 2,
         backgroundColor: "#fffefb",
-        skipFonts: true,
+        // 不再 skipFonts:讓 html-to-image 把字體 inline 進 SVG,
+        // 即使裝置端字體還沒準備好,輸出 PNG 仍能正確渲染
       });
 
       const filename = `dearmon-${Date.now()}.png`;
