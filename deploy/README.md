@@ -58,7 +58,7 @@ cd dearmon
 docker compose up -d --build
 docker compose ps              # 確認狀態
 docker compose logs -f         # 看 log
-curl -I http://127.0.0.1:3000  # 應該看到 200
+curl -I http://127.0.0.1:3001  # 應該看到 200(host port 3001 → container 3000)
 ```
 
 ## 4. nginx 反向代理
