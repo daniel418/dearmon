@@ -40,6 +40,8 @@ export default function PreviewCard({
   const [position, setPosition] = useState<Position>({ x: 50, y: 50 });
   const [dragging, setDragging] = useState(false);
   const [hintDismissed, setHintDismissed] = useState(false);
+  // 已生成的卡片圖,顯示在下方供 LINE / WebView 等不支援 a[download] 的環境長按儲存
+  const [resultImage, setResultImage] = useState<string | null>(null);
 
   // 換照片時重置位置與提示
   useEffect(() => {
@@ -125,6 +127,14 @@ export default function PreviewCard({
         // 字體已由前面的 document.fonts.load 主動載入,canvas 截圖時用得到
         skipFonts: true,
       });
+
+      // 把生成的 PNG 顯示在下方,LINE / 受限 WebView 環境可長按儲存(LINE 會擋 a[download],但不擋長按圖片儲存)
+      setResultImage(dataUrl);
+
+      // LINE 內建瀏覽器明確擋下載 → 不要觸發 a[download],免得跳「不支援檔案下載」系統警告
+      const isLineApp =
+        typeof navigator !== "undefined" && /Line\//.test(navigator.userAgent);
+      if (isLineApp) return;
 
       const filename = `dearmon-${Date.now()}.png`;
 
@@ -303,6 +313,22 @@ export default function PreviewCard({
             {downloading ? "輸出中…" : "下載 PNG"}
           </button>
         </div>
+
+        {resultImage && (
+          <div className="space-y-2 rounded-2xl border border-primary/40 bg-surface-soft p-4">
+            <p className="text-[12px] leading-6 text-foreground">
+              卡片已生成 — 在 LINE 內建瀏覽器或不允許下載的 App 裡,請
+              <strong className="text-primary">長按下方圖片</strong>
+              (桌機右鍵)選「儲存到照片 / 另存圖片」。
+            </p>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={resultImage}
+              alt="生成的卡片(長按儲存)"
+              className="w-full rounded-xl border border-border"
+            />
+          </div>
+        )}
       </div>
     </aside>
   );
