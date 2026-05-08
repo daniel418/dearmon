@@ -100,36 +100,41 @@ export default function PreviewCard({
 
       const filename = `dearmon-${Date.now()}.png`;
 
-      // 手機優先:呼叫原生分享選單(iOS 直接給「儲存到照片」、Android 給「下載 / LINE / Photos」)
-      const blob = await (await fetch(dataUrl)).blob();
-      const file = new File([blob], filename, { type: "image/png" });
+      // 只有「觸控指標」(手機 / 平板)才走 Web Share — 桌機(滑鼠)直接下載比較直覺
+      const isCoarsePointer =
+        typeof window !== "undefined" &&
+        typeof window.matchMedia === "function" &&
+        window.matchMedia("(pointer: coarse)").matches;
 
-      let shared = false;
-      if (
-        typeof navigator !== "undefined" &&
-        typeof navigator.share === "function" &&
-        typeof navigator.canShare === "function" &&
-        navigator.canShare({ files: [file] })
-      ) {
-        try {
-          await navigator.share({
-            files: [file],
-            title: "Dearmon 母親節卡片",
-          });
-          shared = true;
-        } catch (err) {
-          // 使用者主動取消就不再 fallback 下載
-          if ((err as Error).name === "AbortError") return;
-          console.warn("Web Share API 失敗,改用一般下載:", err);
+      if (isCoarsePointer) {
+        const blob = await (await fetch(dataUrl)).blob();
+        const file = new File([blob], filename, { type: "image/png" });
+
+        if (
+          typeof navigator !== "undefined" &&
+          typeof navigator.share === "function" &&
+          typeof navigator.canShare === "function" &&
+          navigator.canShare({ files: [file] })
+        ) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: "Dearmon 母親節卡片",
+            });
+            return; // 分享成功 → 結束(finally 仍會把 downloading 設回 false)
+          } catch (err) {
+            if ((err as Error).name === "AbortError") return; // 使用者取消
+            console.warn("Web Share API 失敗,改用一般下載:", err);
+            // 其他真錯誤掉到下方 fallback
+          }
         }
       }
 
-      if (!shared) {
-        const link = document.createElement("a");
-        link.download = filename;
-        link.href = dataUrl;
-        link.click();
-      }
+      // 桌機 / 不支援 share / share 失敗 → 一般下載
+      const link = document.createElement("a");
+      link.download = filename;
+      link.href = dataUrl;
+      link.click();
     } catch (error) {
       const e = error as unknown;
       const ctor =
