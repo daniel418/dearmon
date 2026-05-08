@@ -1,4 +1,6 @@
-# 部署到 dearmon.daniellin.tw
+# 部署到 dearmom.daniellin.tw
+
+> 注意:repo 與本機目錄保留舊拼字 `dearmon`(內部稱呼),對外網域為 `dearmom.daniellin.tw`(母親節主題拼字)。
 
 > 改用 **static export + nginx 直送**,VPS 不需 Node / Docker。
 > 環境假設:Ubuntu/Debian VPS、已有 nginx、DNS 在 Cloudflare。
@@ -28,8 +30,8 @@ sudo chown -R $USER:$USER /var/www/dearmon
 # 設 nginx vhost
 cd /opt/dearmon          # 你已 clone 的 repo
 git pull
-sudo cp deploy/nginx-dearmon.conf /etc/nginx/sites-available/dearmon.daniellin.tw
-sudo ln -s /etc/nginx/sites-available/dearmon.daniellin.tw /etc/nginx/sites-enabled/
+sudo cp deploy/nginx-dearmon.conf /etc/nginx/sites-available/dearmom.daniellin.tw
+sudo ln -s /etc/nginx/sites-available/dearmom.daniellin.tw /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
 ```
