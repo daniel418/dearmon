@@ -5,6 +5,9 @@ import HomeLayout from "@/components/HomeLayout";
 import UploadDropzone from "@/components/UploadDropzone";
 import PromptTextarea from "@/components/PromptTextarea";
 import FontSelector, { type FontKey } from "@/components/FontSelector";
+import BackgroundSelector, {
+  type BackgroundKey,
+} from "@/components/BackgroundSelector";
 import GenerateButton from "@/components/GenerateButton";
 import PreviewCard from "@/components/PreviewCard";
 
@@ -12,6 +15,7 @@ export default function HomePage() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [fontKey, setFontKey] = useState<FontKey>("mincho");
+  const [backgroundKey, setBackgroundKey] = useState<BackgroundKey>("none");
   const [loading, setLoading] = useState(false);
   const [generated, setGenerated] = useState(false);
 
@@ -32,6 +36,7 @@ export default function HomePage() {
         <UploadDropzone imageUrl={imageUrl} onChange={setImageUrl} />
         <PromptTextarea value={message} onChange={setMessage} />
         <FontSelector value={fontKey} onChange={setFontKey} />
+        <BackgroundSelector value={backgroundKey} onChange={setBackgroundKey} />
         <GenerateButton
           disabled={!canGenerate}
           loading={loading}
@@ -43,6 +48,7 @@ export default function HomePage() {
         imageUrl={imageUrl}
         message={message}
         fontKey={fontKey}
+        backgroundKey={backgroundKey}
         generated={generated}
       />
     </HomeLayout>

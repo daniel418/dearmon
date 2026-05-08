@@ -4,11 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { toPng } from "html-to-image";
 import { FONT_OPTIONS, type FontKey } from "./FontSelector";
+import { getBackgroundSrc, type BackgroundKey } from "./BackgroundSelector";
 
 type Props = {
   imageUrl: string | null;
   message: string;
   fontKey: FontKey;
+  backgroundKey: BackgroundKey;
   generated: boolean;
 };
 
@@ -21,8 +23,10 @@ export default function PreviewCard({
   imageUrl,
   message,
   fontKey,
+  backgroundKey,
   generated,
 }: Props) {
+  const backgroundSrc = getBackgroundSrc(backgroundKey);
   const cardRef = useRef<HTMLElement>(null);
   const photoRef = useRef<HTMLDivElement>(null);
   const dragState = useRef<{
@@ -136,7 +140,17 @@ export default function PreviewCard({
           ref={cardRef}
           className="relative overflow-hidden rounded-3xl border border-border bg-surface p-8 shadow-[0_30px_60px_-40px_rgba(46,38,32,0.25)]"
         >
-          <CardOrnaments />
+          {backgroundSrc ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={backgroundSrc}
+              alt=""
+              aria-hidden
+              className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+            />
+          ) : (
+            <CardOrnaments />
+          )}
 
           <div className="relative">
             <Corner className="pointer-events-none absolute right-0 top-0 h-12 w-12 text-primary-soft" />
@@ -185,7 +199,14 @@ export default function PreviewCard({
             </div>
 
             <p
-              className={`mt-6 whitespace-pre-line text-[15px] leading-9 text-foreground ${font.className}`}
+              className={[
+                "mt-6 whitespace-pre-line text-[15px] leading-9 text-foreground",
+                font.className,
+                // 有底圖時加半透明白底,確保文字可讀
+                backgroundSrc
+                  ? "rounded-2xl bg-surface/85 px-4 py-3 backdrop-blur-sm"
+                  : "",
+              ].join(" ")}
             >
               {bodyText}
             </p>
