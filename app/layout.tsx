@@ -1,27 +1,18 @@
 import type { Metadata } from "next";
-import { Noto_Sans_JP, Shippori_Mincho, Klee_One } from "next/font/google";
+
+// 自託管字體(避免 build 時連 fonts.googleapis.com)
+import "@fontsource/noto-sans-jp/300.css";
+import "@fontsource/noto-sans-jp/400.css";
+import "@fontsource/noto-sans-jp/500.css";
+import "@fontsource/noto-sans-jp/700.css";
+import "@fontsource/shippori-mincho/400.css";
+import "@fontsource/shippori-mincho/500.css";
+import "@fontsource/shippori-mincho/600.css";
+import "@fontsource/shippori-mincho/700.css";
+import "@fontsource/klee-one/400.css";
+import "@fontsource/klee-one/600.css";
+
 import "./globals.css";
-
-const notoSansJp = Noto_Sans_JP({
-  variable: "--font-noto-sans-jp",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "700"],
-  display: "swap",
-});
-
-const shipporiMincho = Shippori_Mincho({
-  variable: "--font-shippori-mincho",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-
-const kleeOne = Klee_One({
-  variable: "--font-klee-one",
-  subsets: ["latin"],
-  weight: ["400", "600"],
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "Dearmon ｜ 寫一封信給媽媽",
@@ -34,10 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="zh-Hant"
-      className={`${notoSansJp.variable} ${shipporiMincho.variable} ${kleeOne.variable} h-full antialiased`}
-    >
+    <html lang="zh-Hant" className="h-full antialiased">
       <body className="paper min-h-full flex flex-col text-foreground">
         {children}
       </body>

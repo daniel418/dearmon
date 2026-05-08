@@ -9,6 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@fontsource/klee-one": "^5.2.8",
+    "@fontsource/noto-sans-jp": "^5.2.9",
+    "@fontsource/shippori-mincho": "^5.2.8",
     "html-to-image": "^1.11.13",
     "next": "^15.5.18",
     "react": "19.2.4",

@@ -13,6 +13,11 @@
   --primary-soft: #f2d1cc;     /* 康乃馨花瓣粉 */
   --accent: #b8a888;           /* 麻色 */
   --sage: #a8b89a;             /* 內斂草綠 */
+
+  /* 字體變數(由 @fontsource 載入,family 名稱固定) */
+  --font-noto-sans-jp: "Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif;
+  --font-shippori-mincho: "Shippori Mincho", "Hiragino Mincho ProN", serif;
+  --font-klee-one: "Klee One", "Hiragino Mincho ProN", serif;
 }
 
 @theme inline {
