@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import { toPng } from "html-to-image";
+import html2canvas from "html2canvas";
 import { FONT_OPTIONS, type FontKey } from "./FontSelector";
 import { getBackgroundSrc, type BackgroundKey } from "./BackgroundSelector";
 
@@ -128,13 +128,20 @@ export default function PreviewCard({
         }),
       );
 
-      const dataUrl = await toPng(cardRef.current, {
-        pixelRatio: 2,
+      // 改用 html2canvas:不走 SVG foreignObject,iOS WKWebView(iPhone FB / LINE in-app)截圖才不會空白
+      const canvas = await html2canvas(cardRef.current, {
+        scale: 2,
         backgroundColor: "#fffefb",
-        skipFonts: true,
+        useCORS: true,
+        logging: false,
       });
 
-      const blob = await (await fetch(dataUrl)).blob();
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob(
+          (b) => (b ? resolve(b) : reject(new Error("canvas.toBlob returned null"))),
+          "image/png",
+        );
+      });
 
       // 上傳到 VPS,拿到正常 https URL — LINE/FB 內建瀏覽器允許長按一般 https 圖片儲存
       let imageUrl: string;
