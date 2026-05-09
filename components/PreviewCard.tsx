@@ -284,11 +284,8 @@ export default function PreviewCard({
               {bodyText}
             </p>
 
-            <div className="mt-8 flex items-center justify-between border-t border-dashed border-border/80 pt-4 text-[11px] text-muted">
-              <span className="font-serif tracking-widest">Dearmon</span>
-              <span>
-                字型 · <span className="text-foreground">{font.label}</span>
-              </span>
+            <div className="mt-8 border-t border-dashed border-border/80 pt-4 text-center font-serif text-[12px] tracking-widest text-foreground">
+              祝天下所有媽媽母親節快樂!
             </div>
           </div>
         </article>
