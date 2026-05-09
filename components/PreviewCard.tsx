@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import html2canvas from "html2canvas";
+import html2canvas from "html2canvas-pro";
 import { FONT_OPTIONS, type FontKey } from "./FontSelector";
 import { getBackgroundSrc, type BackgroundKey } from "./BackgroundSelector";
 
