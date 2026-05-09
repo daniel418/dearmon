@@ -104,7 +104,7 @@ export default function PreviewCard({
       //    LINE in-app browser 等環境字體載入較 lazy,沒這步可能截到空白
       if (typeof document !== "undefined" && "fonts" in document) {
         const sampleText =
-          bodyText + " HAPPY MOTHER'S DAY Dearmon 字型 明朝體 黑體 手書き";
+          bodyText + " HAPPY MOTHER'S DAY DearMOM 字型 明朝體 黑體 手書き";
         await Promise.all([
           document.fonts.load(`400 15px "Noto Sans JP"`, sampleText),
           document.fonts.load(`400 15px "Shippori Mincho"`, sampleText),
@@ -134,12 +134,26 @@ export default function PreviewCard({
         skipFonts: true,
       });
 
-      // dataUrl → Blob → blob URL(blob URL 在多數 WebView 表現比 data URL 友善)
       const blob = await (await fetch(dataUrl)).blob();
-      const blobUrl = URL.createObjectURL(blob);
-      setResultImage(blobUrl);
 
-      const filename = `dearmon-${Date.now()}.png`;
+      // 上傳到 VPS,拿到正常 https URL — LINE/FB 內建瀏覽器允許長按一般 https 圖片儲存
+      let imageUrl: string;
+      try {
+        const id = generateRandomId();
+        const res = await fetch(`/api/upload/${id}.png`, {
+          method: "PUT",
+          body: blob,
+          headers: { "Content-Type": "image/png" },
+        });
+        if (!res.ok) throw new Error(`upload http ${res.status}`);
+        imageUrl = `/cards/${id}.png`;
+      } catch (uploadErr) {
+        console.warn("上傳失敗,改用本地 blob URL:", uploadErr);
+        imageUrl = URL.createObjectURL(blob);
+      }
+      setResultImage(imageUrl);
+
+      const filename = `dearmom-${Date.now()}.png`;
 
       // 只有「觸控指標」(手機 / 平板)才走 Web Share — 桌機(滑鼠)直接下載比較直覺
       const isCoarsePointer =
@@ -159,7 +173,7 @@ export default function PreviewCard({
           try {
             await navigator.share({
               files: [file],
-              title: "Dearmon 母親節卡片",
+              title: "DearMOM 母親節卡片",
             });
             return;
           } catch (err) {
@@ -172,7 +186,7 @@ export default function PreviewCard({
       // 桌機 / 不支援 share → 一般下載
       const link = document.createElement("a");
       link.download = filename;
-      link.href = blobUrl;
+      link.href = imageUrl;
       link.click();
     } catch (error) {
       const e = error as unknown;
@@ -308,18 +322,16 @@ export default function PreviewCard({
             ].join(" ")}
           >
             <DownloadIcon className="h-3.5 w-3.5" />
-            {downloading ? "輸出中…" : "下載 PNG"}
+            {downloading ? "輸出中…" : "下載卡片"}
           </button>
         </div>
 
         {resultImage && (
           <div className="space-y-2 rounded-2xl border border-primary/40 bg-surface-soft p-4">
             <p className="text-[12px] leading-6 text-foreground">
-              卡片已生成。LINE 內請
-              <strong className="text-primary">點下方圖片</strong>
-              開大圖,在大圖上
-              <strong className="text-primary">長按 → 儲存到相簿</strong>
-              ;桌機右鍵也可另存。
+              卡片已生成 — 手機請
+              <strong className="text-primary">長按下方圖片 → 儲存到相簿</strong>
+              (桌機右鍵 → 另存圖片)。
             </p>
             <a
               href={resultImage}
@@ -344,6 +356,13 @@ export default function PreviewCard({
 
 function clamp(value: number) {
   return Math.max(0, Math.min(100, value));
+}
+
+// 產生 24 字元 hex 隨機 ID (12 bytes),用於 /api/upload/<id>.png 檔名
+function generateRandomId(): string {
+  const bytes = new Uint8Array(12);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 type Ornament = {

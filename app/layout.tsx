@@ -15,7 +15,7 @@ import "@fontsource/klee-one/600.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Dearmon ｜ 寫一封信給媽媽",
+  title: "DearMOM ｜ 寫一封信給媽媽",
   description: "用文字與字型，為母親節留下一張溫柔的卡片。",
 };
 

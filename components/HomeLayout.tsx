@@ -34,7 +34,7 @@ export default function HomeLayout({ children }: Props) {
 
       <footer className="border-t border-border/60 px-8 py-8 sm:px-16">
         <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-2 text-xs text-muted sm:flex-row sm:items-center">
-          <span className="font-serif tracking-widest">Dearmon</span>
+          <span className="font-serif tracking-widest">DearMOM</span>
           <span>© {new Date().getFullYear()} ｜ 願愛意如紙，常駐心間。</span>
         </div>
       </footer>
