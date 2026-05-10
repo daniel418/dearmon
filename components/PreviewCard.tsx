@@ -254,41 +254,48 @@ export default function PreviewCard({
               HAPPY・MOTHER&rsquo;S DAY
             </div>
 
+            {/* 用 background-image 取代 <img object-cover>:
+                html2canvas 不認 <img> 的 objectPosition inline style,
+                改用 CSS background 才能正確 render 使用者拖曳後的位置 */}
             <div
               ref={photoRef}
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
               onPointerUp={endDrag}
               onPointerCancel={endDrag}
+              style={
+                imageUrl
+                  ? {
+                      backgroundImage: `url("${imageUrl}")`,
+                      backgroundSize: "cover",
+                      backgroundRepeat: "no-repeat",
+                      backgroundPosition: `${position.x}% ${position.y}%`,
+                    }
+                  : undefined
+              }
+              role="img"
+              aria-label={imageUrl ? "卡片照片" : "尚未上傳照片"}
               className={[
-                "relative overflow-hidden rounded-2xl bg-surface-soft select-none",
+                "relative h-64 w-full overflow-hidden rounded-2xl bg-surface-soft select-none sm:h-72",
                 imageUrl
                   ? dragging
                     ? "cursor-grabbing"
                     : "cursor-grab"
-                  : "",
+                  : "flex items-center justify-center",
               ].join(" ")}
             >
-              {imageUrl ? (
-                <>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={imageUrl}
-                    alt="卡片照片"
-                    draggable={false}
-                    style={{ objectPosition: `${position.x}% ${position.y}%` }}
-                    className="h-64 w-full object-cover sm:h-72"
-                  />
-                  {!dragging && !hintDismissed && !downloading && (
-                    <span className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-foreground/55 px-3 py-1 text-[10px] tracking-[0.3em] text-surface backdrop-blur-sm transition-opacity">
-                      拖曳以調整位置
-                    </span>
-                  )}
-                </>
-              ) : (
-                <div className="flex h-64 w-full items-center justify-center text-xs tracking-[0.3em] text-muted sm:h-72">
+              {imageUrl &&
+                !dragging &&
+                !hintDismissed &&
+                !downloading && (
+                  <span className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-foreground/55 px-3 py-1 text-[10px] tracking-[0.3em] text-surface backdrop-blur-sm transition-opacity">
+                    拖曳以調整位置
+                  </span>
+                )}
+              {!imageUrl && (
+                <span className="text-xs tracking-[0.3em] text-muted">
                   PHOTO PLACEHOLDER
-                </div>
+                </span>
               )}
             </div>
 
