@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import HomeLayout from "@/components/HomeLayout";
-import UploadDropzone from "@/components/UploadDropzone";
+import UploadDropzone, {
+  PHOTO_HEIGHT_DEFAULT,
+} from "@/components/UploadDropzone";
 import PromptTextarea from "@/components/PromptTextarea";
 import FontSelector, { type FontKey } from "@/components/FontSelector";
 import BackgroundSelector, {
@@ -16,6 +18,7 @@ export default function HomePage() {
   const [message, setMessage] = useState("");
   const [fontKey, setFontKey] = useState<FontKey>("mincho");
   const [backgroundKey, setBackgroundKey] = useState<BackgroundKey>("none");
+  const [photoHeight, setPhotoHeight] = useState<number>(PHOTO_HEIGHT_DEFAULT);
   const [loading, setLoading] = useState(false);
   const [generated, setGenerated] = useState(false);
 
@@ -33,7 +36,12 @@ export default function HomePage() {
   return (
     <HomeLayout>
       <div className="space-y-10">
-        <UploadDropzone imageUrl={imageUrl} onChange={setImageUrl} />
+        <UploadDropzone
+          imageUrl={imageUrl}
+          onChange={setImageUrl}
+          photoHeight={photoHeight}
+          onPhotoHeightChange={setPhotoHeight}
+        />
         <PromptTextarea value={message} onChange={setMessage} />
         <FontSelector value={fontKey} onChange={setFontKey} />
         <BackgroundSelector value={backgroundKey} onChange={setBackgroundKey} />
@@ -49,6 +57,7 @@ export default function HomePage() {
         message={message}
         fontKey={fontKey}
         backgroundKey={backgroundKey}
+        photoHeight={photoHeight}
         generated={generated}
       />
     </HomeLayout>

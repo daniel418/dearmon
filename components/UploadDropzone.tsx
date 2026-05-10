@@ -6,11 +6,21 @@ import type { ChangeEvent, DragEvent } from "react";
 type Props = {
   imageUrl: string | null;
   onChange: (url: string | null) => void;
+  photoHeight: number;
+  onPhotoHeightChange: (h: number) => void;
 };
 
 const ACCEPT = "image/png,image/jpeg,image/webp";
+export const PHOTO_HEIGHT_MIN = 240;
+export const PHOTO_HEIGHT_MAX = 600;
+export const PHOTO_HEIGHT_DEFAULT = 400;
 
-export default function UploadDropzone({ imageUrl, onChange }: Props) {
+export default function UploadDropzone({
+  imageUrl,
+  onChange,
+  photoHeight,
+  onPhotoHeightChange,
+}: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
 
@@ -101,6 +111,35 @@ export default function UploadDropzone({ imageUrl, onChange }: Props) {
           className="hidden"
         />
       </div>
+
+      {imageUrl && (
+        <div className="space-y-2 rounded-2xl border border-border bg-surface px-4 py-3">
+          <div className="flex items-baseline justify-between">
+            <label
+              htmlFor="photo-height"
+              className="text-xs tracking-[0.2em] text-muted"
+            >
+              照片大小
+            </label>
+            <span className="font-serif text-[11px] tabular-nums text-muted">
+              {photoHeight} px
+            </span>
+          </div>
+          <input
+            id="photo-height"
+            type="range"
+            min={PHOTO_HEIGHT_MIN}
+            max={PHOTO_HEIGHT_MAX}
+            step={10}
+            value={photoHeight}
+            onChange={(e) => onPhotoHeightChange(Number(e.target.value))}
+            className="w-full accent-primary"
+          />
+          <p className="text-[11px] text-muted-soft">
+            拖滑桿調整照片高度;照片內位置可在右側預覽上拖曳。
+          </p>
+        </div>
+      )}
     </section>
   );
 }

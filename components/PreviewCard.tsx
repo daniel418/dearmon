@@ -11,6 +11,7 @@ type Props = {
   message: string;
   fontKey: FontKey;
   backgroundKey: BackgroundKey;
+  photoHeight: number;
   generated: boolean;
 };
 
@@ -24,6 +25,7 @@ export default function PreviewCard({
   message,
   fontKey,
   backgroundKey,
+  photoHeight,
   generated,
 }: Props) {
   const backgroundSrc = getBackgroundSrc(backgroundKey);
@@ -263,20 +265,21 @@ export default function PreviewCard({
               onPointerMove={onPointerMove}
               onPointerUp={endDrag}
               onPointerCancel={endDrag}
-              style={
-                imageUrl
+              style={{
+                height: `${photoHeight}px`,
+                ...(imageUrl
                   ? {
                       backgroundImage: `url("${imageUrl}")`,
                       backgroundSize: "cover",
                       backgroundRepeat: "no-repeat",
                       backgroundPosition: `${position.x}% ${position.y}%`,
                     }
-                  : undefined
-              }
+                  : {}),
+              }}
               role="img"
               aria-label={imageUrl ? "卡片照片" : "尚未上傳照片"}
               className={[
-                "relative h-64 w-full overflow-hidden rounded-2xl bg-surface-soft select-none sm:h-72",
+                "relative w-full overflow-hidden rounded-2xl bg-surface-soft select-none",
                 imageUrl
                   ? dragging
                     ? "cursor-grabbing"
