@@ -292,18 +292,20 @@ export default function PreviewCard({
               )}
             </div>
 
-            <p
-              className={[
-                "mt-6 whitespace-pre-line text-[15px] leading-9 text-foreground",
-                font.className,
-                // 有底圖時加半透明白底,確保文字可讀
+            {/* 把底色框與文字分兩層,html2canvas 才不會把多段文字 render 出框外 */}
+            <div
+              className={
                 backgroundSrc
-                  ? "rounded-2xl bg-surface/85 px-4 py-3 backdrop-blur-sm"
-                  : "",
-              ].join(" ")}
+                  ? "mt-6 rounded-2xl bg-surface/90 px-4 py-3"
+                  : "mt-6"
+              }
             >
-              {bodyText}
-            </p>
+              <p
+                className={`whitespace-pre-line text-[15px] leading-9 text-foreground ${font.className}`}
+              >
+                {bodyText}
+              </p>
+            </div>
 
             <div className="mt-8 border-t border-dashed border-border/80 pt-4 text-center font-serif text-[12px] tracking-widest text-foreground">
               祝天下所有媽媽母親節快樂!
